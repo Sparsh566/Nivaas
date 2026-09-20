@@ -63,10 +63,8 @@ def create_gradio_app() -> gr.Blocks:
             with gr.Column(scale=1):
                 chatbot = gr.Chatbot(
                     label="Chat",
-                    type="messages",
                     show_label=False,
                     height=460,
-                    show_copy_button=False,
                 )
 
                 with gr.Row():
@@ -157,10 +155,17 @@ def create_gradio_app() -> gr.Blocks:
 
         # Event handlers
         async def handle_message(message, history, state_dict):
-            if not message or not message.strip():
-                return history, state_dict, "", "", "", ""
-
             state = AgentState.from_dict(state_dict)
+            if not message or not message.strip():
+                yield (
+                    history or [],
+                    state_dict,
+                    render_shortlist(state.last_shortlist, state.is_demo),
+                    render_requirements_panel(state.requirements, state.weights),
+                    render_agent_steps(state.agent_steps),
+                    "",
+                )
+                return
 
             # Add user message to chat
             history = history or []
