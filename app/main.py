@@ -30,18 +30,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Simple per-IP rate limiting
+# Simple per-IP rate limiting (excludes static assets, localhost, and health checks)
 _rate_limits: dict[str, list[float]] = defaultdict(list)
-RATE_LIMIT_REQUESTS = 30
+RATE_LIMIT_REQUESTS = 300
 RATE_LIMIT_WINDOW = 60  # seconds
 
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    client_ip = request.client.host if request.client else "unknown"
-    now = time.time()
+    path = request.url.path
+    # Bypass rate limiting for static assets, legal pages, health checks, and favicon
+    if (
+        path.startswith(("/static", "/assets", "/favicon"))
+        or path in ("/health", "/terms", "/privacy")
+        or "." in path.split("/")[-1]
+    ):
+        return await call_next(request)
 
-    # Clean old entries
+    client_ip = request.client.host if request.client else "unknown"
+    if client_ip in ("127.0.0.1", "localhost", "::1"):
+        return await call_next(request)
+
+    now = time.time()
     _rate_limits[client_ip] = [
         t for t in _rate_limits[client_ip] if now - t < RATE_LIMIT_WINDOW
     ]
@@ -53,8 +63,7 @@ async def rate_limit_middleware(request: Request, call_next):
         )
 
     _rate_limits[client_ip].append(now)
-    response = await call_next(request)
-    return response
+    return await call_next(request)
 
 
 # Static files
@@ -90,13 +99,18 @@ async def health():
 async def startup_event():
     logger.info("Starting %s", settings.APP_NAME)
     try:
+        import asyncio
         from app.db.models import Base
         from app.db.engine import async_engine
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+
+        async def init_db():
+            async with async_engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+
+        await asyncio.wait_for(init_db(), timeout=2.0)
         logger.info("Database tables verified")
     except Exception as e:
-        logger.warning("Could not connect to database: %s. App will still run but caching is disabled.", str(e))
+        logger.warning("Database unavailable (%s). Continuing in serverless/in-memory mode.", str(e))
 
 
 # Mount Gradio at root (AFTER legal routes)
