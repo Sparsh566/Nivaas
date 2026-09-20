@@ -100,6 +100,9 @@ async def health():
     }
 
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
 # Request models
 class ChatRequest(BaseModel):
     message: str
@@ -107,6 +110,7 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/chat")
+@app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     """Conversational endpoint: processes query through agent loop."""
     state = AgentState.from_dict(req.state or {})
@@ -123,18 +127,26 @@ async def chat_endpoint(req: ChatRequest):
 
 
 @app.post("/api/emi")
+@app.post("/emi")
 async def emi_endpoint(args: CalculateEMIArgs):
     return await calculate_emi.execute(args)
 
 
 @app.post("/api/compare")
+@app.post("/compare")
 async def compare_endpoint(args: ComparePropertiesArgs):
     return await compare_properties.execute(args)
 
 
-# Main Single Page App
+# Main Single Page App (with route aliases for Vercel and local dev)
 @app.get("/", response_class=HTMLResponse)
-async def index_page():
+@app.get("/api", response_class=HTMLResponse)
+@app.get("/api/", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/index.html", response_class=HTMLResponse)
+@app.get("/index", response_class=HTMLResponse)
+async def index_page() -> HTMLResponse:
     possible_paths = [
         os.path.join(static_dir, "index.html"),
         os.path.join(os.path.dirname(__file__), "static", "index.html"),
@@ -144,8 +156,18 @@ async def index_page():
     for p in possible_paths:
         if os.path.exists(p):
             with open(p, "r", encoding="utf-8") as f:
-                return f.read()
+                return HTMLResponse(content=f.read())
     return HTMLResponse("<h1>Nivaas API is active</h1>")
+
+
+# 404 Fallback for HTML navigation requests (Single Page App routing)
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            return await index_page()
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 # Initialize database tables on startup (with graceful fallback)
