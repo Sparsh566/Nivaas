@@ -135,10 +135,16 @@ async def compare_endpoint(args: ComparePropertiesArgs):
 # Main Single Page App
 @app.get("/", response_class=HTMLResponse)
 async def index_page():
-    index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
+    possible_paths = [
+        os.path.join(static_dir, "index.html"),
+        os.path.join(os.path.dirname(__file__), "static", "index.html"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "static", "index.html"),
+        os.path.join(os.getcwd(), "app", "static", "index.html"),
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return f.read()
     return HTMLResponse("<h1>Nivaas API is active</h1>")
 
 
@@ -146,6 +152,10 @@ async def index_page():
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting %s", settings.APP_NAME)
+    if os.environ.get("VERCEL") or "localhost" in settings.DATABASE_URL:
+        logger.info("Serverless environment or local DB default detected. Skipping startup DB block.")
+        return
+
     try:
         import asyncio
         from app.db.models import Base

@@ -10,4 +10,10 @@ if ROOT_DIR not in sys.path:
 
 from app.main import app
 
-# 'app' is the FastAPI ASGI application exported for Vercel
+# Export native ASGI 'app' for Vercel ASGI runtime
+# Also export Mangum 'handler' for AWS Lambda / WSGI compatibility
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except Exception:
+    handler = app
