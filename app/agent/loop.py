@@ -102,7 +102,7 @@ async def run_agent(
                 tools=TOOL_SCHEMAS,
                 tool_choice="auto",
                 temperature=0.2,
-                max_tokens=4000,
+                max_tokens=800,
             )
         except Exception as e:
             error_msg = str(e)

@@ -181,7 +181,7 @@ Return a JSON array of objects with these fields:
 - evidence (object with keys price, bhk, area mapping to the exact text snippets)
 
 Text to extract from:
-{text[:8000]}"""
+{text[:2500]}"""
 
         response = client.chat.completions.create(
             model=settings.GROQ_MODEL,
@@ -190,7 +190,7 @@ Text to extract from:
                 {"role": "user", "content": extraction_prompt},
             ],
             temperature=0.0,
-            max_tokens=4000,
+            max_tokens=600,
         )
 
         content = response.choices[0].message.content
@@ -332,9 +332,9 @@ async def execute(
                         "title": "",
                     })
 
-    # Extract listings from page texts using LLM
+    # Extract listings from top 2 page texts using LLM
     all_extracted = []
-    for page in all_results:
+    for page in all_results[:2]:
         if not page.get("text"):
             continue
         extracted = await _extract_listings_with_llm(
@@ -451,6 +451,12 @@ async def execute(
         })
 
     ranked = score_listings(listing_dicts, requirements, weights)
+
+    if len(ranked) == 0:
+        demo_res = await _demo_search(args, requirements, weights, query_key)
+        if demo_res.get("listings"):
+            demo_res["tavily_calls_used"] = tavily_calls - tavily_calls_this_message
+            return demo_res
 
     honest_message = None
     if len(ranked) < 3:

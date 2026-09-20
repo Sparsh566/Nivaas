@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nivaas - Property Recommendation Agent</title>
+  <meta name="description" content="Conversational property recommendation agent for Indian real estate with deterministic scoring, web search, and EMI calculation.">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0B0F17;
+      --bg-surface: #111827;
+      --bg-card: #1F2937;
+      --bg-card-hover: #283548;
+      --border-subtle: #1F2937;
+      --border-light: #374151;
+      --primary: #0D9488;
+      --primary-hover: #14B8A6;
+      --primary-light: rgba(13, 148, 136, 0.15);
+      --accent: #38BDF8;
+      --text-primary: #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      --danger: #EF4444;
+      --success: #10B981;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      background-image: none !important;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #FFFFFF;
+    }
+
+    .brand-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary-hover);
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 4px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      flex: 1;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    .chat-panel {
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+    }
+
+    .chat-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .chat-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 92%;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .avatar.user {
+      background: #2563EB;
+      color: white;
+    }
+
+    .avatar.assistant {
+      background: var(--primary);
+      color: white;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .message.user .bubble {
+      background: #2563EB;
+      color: #FFFFFF;
+    }
+
+    .message.assistant .bubble {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+    }
+
+    .bubble p {
+      margin-bottom: 6px;
+    }
+
+    .bubble p:last-child {
+      margin-bottom: 0;
+    }
+
+    .bubble ul {
+      margin-left: 18px;
+      margin-bottom: 6px;
+    }
+
+    .bubble li {
+      margin-bottom: 4px;
+    }
+
+    .suggestions {
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-base);
+    }
+
+    .chip {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chip:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-hover);
+    }
+
+    .chat-input-area {
+      padding: 14px 18px;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 6px 10px;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: var(--primary);
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .input-wrapper input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .btn-send {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-send:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-send:disabled {
+      background: var(--text-muted);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .dashboard-panel {
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+    }
+
+    .tab-btn.active {
+      color: #FFFFFF;
+      background: var(--primary);
+    }
+
+    .badge-count {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+    }
+
+    .tab-content {
+      padding: 20px;
+      flex: 1;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .shortlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .property-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .property-card:hover {
+      border-color: var(--primary);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .rank-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .match-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      border: 1px solid rgba(20, 184, 166, 0.4);
+      color: var(--primary-hover);
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .property-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .property-price {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary-hover);
+    }
+
+    .specs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .spec-pill {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .factors-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      font-size: 0.78rem;
+    }
+
+    .factor-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      color: var(--text-secondary);
+    }
+
+    .factor-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .factor-bar-bg {
+      width: 70px;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .factor-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-calc-emi {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-calc-emi:hover {
+      background: var(--primary-light);
+      color: var(--primary-hover);
+      border-color: var(--primary);
+    }
+
+    .btn-view-source {
+      background: transparent;
+      color: var(--accent);
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-view-source:hover {
+      text-decoration: underline;
+    }
+
+    .emi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .emi-hero {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg-base);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      margin-bottom: 24px;
+    }
+
+    .emi-value {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary-hover);
+      margin: 8px 0;
+    }
+
+    .emi-sub {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .form-value-pill {
+      font-family: var(--font-mono);
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      outline: none;
+      accent-color: var(--primary);
+    }
+
+    .stats-trio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .stat-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 12px 20px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-left: 12px;
+    }
+
+    footer a:hover {
+      color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="/" class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Nivaas</div>
+      </div>
+      <div class="brand-tag">AI Property Concierge</div>
+    </a>
+    <div class="header-actions">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        <span>Groq Qwen 3.8 Active</span>
+      </div>
+      <button class="btn-secondary" id="btn-reset" onclick="resetSession()">
+        New Search
+      </button>
+      <a href="/terms" class="btn-secondary" target="_blank">Terms</a>
+      <a href="/privacy" class="btn-secondary" target="_blank">Privacy</a>
+    </div>
+  </header>
+
+  <div class="app-container">
+
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="chat-title">Property Search Assistant</div>
+        <div class="chat-desc">Describe preferred city, locality, budget, and connectivity in natural language.</div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <div class="message assistant">
+          <div class="avatar assistant">N</div>
+          <div class="bubble">
+            <p><strong>Welcome to Nivaas</strong>, your AI property advisor for Indian real estate.</p>
+            <p>Tell me what you are looking for, or pick a sample search below:</p>
+            <ul>
+              <li><strong>Search:</strong> 2BHK in Pune under 70 Lakh near Hinjewadi IT park</li>
+              <li><strong>Refine:</strong> Prioritize metro connectivity over carpet area</li>
+              <li><strong>Compare:</strong> Compare top 2 properties side by side</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="suggestions">
+        <div class="chip" onclick="sendSuggestion('2BHK flat in Hinjewadi Pune under 70 lakh near IT park')">2BHK Hinjewadi under 70L</div>
+        <div class="chip" onclick="sendSuggestion('3BHK apartment in Baner Pune with metro connectivity')">3BHK Baner Metro</div>
+        <div class="chip" onclick="sendSuggestion('Flat in Wakad Pune under 60 lakh with parking')">Flat Wakad under 60L</div>
+        <div class="chip" onclick="sendSuggestion('Prioritize metro connectivity and budget')">Prioritize Metro</div>
+      </div>
+
+      <div class="chat-input-area">
+        <form id="chat-form" onsubmit="handleChatSubmit(event)">
+          <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="Type: 2BHK in Pune under 70L near IT park, metro..." autocomplete="off" />
+            <button type="submit" class="btn-send" id="btn-send">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="dashboard-panel">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-shortlist-btn" onclick="switchTab('shortlist')">
+          <span>Ranked Shortlist</span>
+          <span class="badge-count" id="shortlist-count">0</span>
+        </button>
+        <button class="tab-btn" id="tab-emi-btn" onclick="switchTab('emi')">
+          <span>EMI Calculator</span>
+        </button>
+        <button class="tab-btn" id="tab-factors-btn" onclick="switchTab('factors')">
+          <span>Match Weights</span>
+        </button>
+      </div>
+
+      <div class="tab-content">
+
+        <div class="tab-pane active" id="pane-shortlist">
+          <div id="shortlist-container">
+            <div class="empty-state">
+              <div class="empty-title">No properties shortlisted yet</div>
+              <p>Type a requirement like <em>2BHK in Pune under 70L</em> in the chat to discover and score real listings.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-emi">
+          <div class="emi-card">
+            <div class="emi-hero">
+              <div class="emi-sub">Estimated Monthly Installment (EMI)</div>
+              <div class="emi-value" id="calc-emi-display">Rs 43,391</div>
+              <div class="emi-sub" id="calc-loan-display">Loan Amount: Rs 50,00,000 (80% of Property Value)</div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <span>Property Price (INR)</span>
+                <span class="form-value-pill" id="lbl-price">Rs 65,00,000</span>
+              </div>
+              <input type="range" id="input-price" min="1500000" max="25000000" step="100000" value="6500000" oninput="updateEMICalculator()" />
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <span>Down Payment (%)</span>
+                <span class="form-value-pill" id="lbl-dp">20%</span>
+              </div>
+              <input type="range" id="input-dp" min="10" max="50" step="5" value="20" oninput="updateEMICalculator()" />
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <span>Interest Rate (% per annum)</span>
+                <span class="form-value-pill" id="lbl-rate">8.5%</span>
+              </div>
+              <input type="range" id="input-rate" min="6.5" max="14.0" step="0.1" value="8.5" oninput="updateEMICalculator()" />
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <span>Loan Tenure (Years)</span>
+                <span class="form-value-pill" id="lbl-tenure">20 Years</span>
+              </div>
+              <input type="range" id="input-tenure" min="5" max="30" step="1" value="20" oninput="updateEMICalculator()" />
+            </div>
+
+            <div class="stats-trio">
+              <div class="stat-box">
+                <div class="stat-title">Principal Loan</div>
+                <div class="stat-val" id="stat-principal">Rs 52.0L</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-title">Total Interest</div>
+                <div class="stat-val" id="stat-interest">Rs 56.3L</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-title">Total Payable</div>
+                <div class="stat-val" id="stat-total">Rs 1.08Cr</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-factors">
+          <div class="emi-card">
+            <h3 style="margin-bottom: 8px; font-size: 1.1rem;">Deterministic Scoring Weights</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
+              Properties are ranked by a Python scoring engine using normalized multi-factor weights. When you say <em>prioritize metro</em>, connectivity weight is doubled and renormalized.
+            </p>
+            <div id="weights-container">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div>Nivaas (c) 2026 | Built for Indian Real Estate Discovery</div>
+    <div>
+      <a href="/terms" target="_blank">Terms of Service</a>
+      <a href="/privacy" target="_blank">Privacy Policy</a>
+      <a href="/health" target="_blank">System Health</a>
+    </div>
+  </footer>
+
+  <script>
+    let agentState = {
+      requirements: {},
+      weights: {
+        "budget_fit": 0.25, "location": 0.25, "connectivity": 0.15, "area": 0.10,
+        "amenities": 0.10, "property_type": 0.05, "furnishing": 0.05, "parking": 0.05
+      },
+      last_shortlist: [],
+      conversation_history: [],
+      agent_steps: [],
+      is_demo: false
+    };
+
+    function formatINR(num) {
+      if (!num || isNaN(num)) return "Rs 0";
+      if (num >= 10000000) {
+        return `Rs ${(num / 10000000).toFixed(2)} Cr`;
+      } else if (num >= 100000) {
+        return `Rs ${(num / 100000).toFixed(2)} Lakh`;
+      }
+      return "Rs " + Math.round(num).toLocaleString('en-IN');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      const btn = document.getElementById(`tab-${tabId}-btn`);
+      const pane = document.getElementById(`pane-${tabId}`);
+      if (btn) btn.classList.add('active');
+      if (pane) pane.classList.add('active');
+    }
+
+    function sendSuggestion(text) {
+      const input = document.getElementById('user-input');
+      input.value = text;
+      handleChatSubmit(new Event('submit'));
+    }
+
+    function resetSession() {
+      agentState = {
+        requirements: {},
+        weights: {
+          "budget_fit": 0.25, "location": 0.25, "connectivity": 0.15, "area": 0.10,
+          "amenities": 0.10, "property_type": 0.05, "furnishing": 0.05, "parking": 0.05
+        },
+        last_shortlist: [],
+        conversation_history: [],
+        agent_steps: [],
+        is_demo: false
+      };
+      const messagesContainer = document.getElementById('chat-messages');
+      messagesContainer.innerHTML = `
+        <div class="message assistant">
+          <div class="avatar assistant">N</div>
+          <div class="bubble">
+            <p>Session reset. What type of property would you like to discover?</p>
+          </div>
+        </div>
+      `;
+      renderShortlist([]);
+      renderWeights();
+    }
+
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      const sendBtn = document.getElementById('btn-send');
+      sendBtn.disabled = true;
+
+      appendMessage('user', text);
+
+      const loadingId = 'loading-' + Date.now();
+      appendMessage('assistant', 'Searching real estate portals and calculating matches...', loadingId);
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, state: agentState })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned error ${res.status}`);
+        }
+
+        const data = await res.json();
+        removeMessage(loadingId);
+
+        agentState = data.state || agentState;
+        appendMessage('assistant', formatMarkdown(data.response));
+
+        if (data.shortlist && data.shortlist.length > 0) {
+          renderShortlist(data.shortlist);
+          switchTab('shortlist');
+        }
+
+        if (data.weights) {
+          renderWeights(data.weights);
+        }
+
+      } catch (err) {
+        removeMessage(loadingId);
+        appendMessage('assistant', `Could not complete request: ${err.message}. Please try again.`);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function appendMessage(role, content, customId) {
+      const container = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${role}`;
+      if (customId) msgDiv.id = customId;
+
+      msgDiv.innerHTML = `
+        <div class="avatar ${role}">${role === 'user' ? 'U' : 'N'}</div>
+        <div class="bubble">${content}</div>
+      `;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function removeMessage(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n- /g, '<br/>* ')
+        .replace(/\n/g, '<br/>');
+    }
+
+    function renderShortlist(items) {
+      const container = document.getElementById('shortlist-container');
+      const countBadge = document.getElementById('shortlist-count');
+      countBadge.innerText = items ? items.length : 0;
+
+      if (!items || items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-title">No properties shortlisted yet</div>
+            <p>Tell the assistant your preferences (city, locality, budget) to see ranked recommendations.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="shortlist-grid">';
+      items.forEach((p, idx) => {
+        const score = Math.round(p.match_score || 0);
+        const priceStr = p.price_inr ? formatINR(p.price_inr) : "Price on Request";
+        const bhkStr = p.bhk ? `${p.bhk} BHK` : "Residential";
+        const areaStr = p.area_sqft ? `${p.area_sqft} sq.ft` : null;
+        const locStr = [p.locality, p.city].filter(Boolean).join(", ") || "Prime Location";
+
+        let factorBars = '';
+        if (p.factor_breakdown && p.factor_breakdown.length > 0) {
+          factorBars = p.factor_breakdown.slice(0, 3).map(f => `
+            <div class="factor-row">
+              <span>${f.label || f.factor}</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="factor-bar-bg"><div class="factor-bar-fill" style="width: ${Math.round((f.score||0)*100)}%;"></div></div>
+                <span style="font-family:var(--font-mono);font-size:0.75rem;">${Math.round((f.score||0)*100)}%</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        html += `
+          <div class="property-card">
+            <div class="card-top">
+              <span class="rank-badge">#${idx + 1} Match</span>
+              <div class="match-score">
+                <span>${score}% Match</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="property-title">${p.title || (bhkStr + " in " + locStr)}</div>
+              <div style="color:var(--text-secondary);font-size:0.82rem;margin-top:2px;">Location: ${locStr}</div>
+            </div>
+
+            <div class="property-price">${priceStr}</div>
+
+            <div class="specs-row">
+              <span class="spec-pill">${bhkStr}</span>
+              ${areaStr ? `<span class="spec-pill">${areaStr}</span>` : ''}
+              ${p.property_type ? `<span class="spec-pill">${p.property_type}</span>` : ''}
+              ${p.furnishing ? `<span class="spec-pill">${p.furnishing}</span>` : ''}
+            </div>
+
+            ${factorBars ? `<div class="factors-box">${factorBars}</div>` : ''}
+
+            <div class="card-actions">
+              <button class="btn-calc-emi" onclick="loadPropertyEMI(${p.price_inr || 6500000})">
+                Check EMI
+              </button>
+              ${p.source_url ? `<a href="${p.source_url}" target="_blank" class="btn-view-source">View Portal &rarr;</a>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderWeights(weights) {
+      const w = weights || agentState.weights;
+      const container = document.getElementById('weights-container');
+      if (!container) return;
+
+      const labels = {
+        budget_fit: "Budget Fit",
+        location: "Location Match",
+        connectivity: "Metro and IT Connectivity",
+        area: "Carpet Area",
+        amenities: "Amenities",
+        property_type: "Property Type",
+        furnishing: "Furnishing Status",
+        parking: "Parking Space"
+      };
+
+      let html = '';
+      for (const [k, v] of Object.entries(w)) {
+        const pct = Math.round(v * 100);
+        html += `
+          <div style="margin-bottom: 12px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;margin-bottom:4px;">
+              <span>${labels[k] || k}</span>
+              <span style="font-family:var(--font-mono);color:var(--primary-hover);">${pct}%</span>
+            </div>
+            <div style="height:6px;background:var(--bg-base);border-radius:var(--radius-sm);overflow:hidden;">
+              <div style="height:100%;background:var(--primary);width:${pct}%;border-radius:var(--radius-sm);"></div>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function updateEMICalculator() {
+      const price = parseFloat(document.getElementById('input-price').value);
+      const dpPct = parseFloat(document.getElementById('input-dp').value);
+      const rateAnnual = parseFloat(document.getElementById('input-rate').value);
+      const tenureYears = parseInt(document.getElementById('input-tenure').value);
+
+      document.getElementById('lbl-price').innerText = formatINR(price);
+      document.getElementById('lbl-dp').innerText = `${dpPct}% (${formatINR(price * (dpPct / 100))})`;
+      document.getElementById('lbl-rate').innerText = `${rateAnnual.toFixed(1)}%`;
+      document.getElementById('lbl-tenure').innerText = `${tenureYears} Years`;
+
+      const loan = price * (1 - dpPct / 100);
+      const monthlyRate = (rateAnnual / 12) / 100;
+      const numMonths = tenureYears * 12;
+
+      let emi = 0;
+      if (monthlyRate === 0) {
+        emi = loan / numMonths;
+      } else {
+        emi = (loan * monthlyRate * Math.pow(1 + monthlyRate, numMonths)) / (Math.pow(1 + monthlyRate, numMonths) - 1);
+      }
+
+      const totalPayable = emi * numMonths;
+      const totalInterest = totalPayable - loan;
+
+      document.getElementById('calc-emi-display').innerText = formatINR(Math.round(emi)) + " / mo";
+      document.getElementById('calc-loan-display').innerText = `Loan Amount: ${formatINR(loan)} (${100 - dpPct}% of price)`;
+      document.getElementById('stat-principal').innerText = formatINR(loan);
+      document.getElementById('stat-interest').innerText = formatINR(totalInterest);
+      document.getElementById('stat-total').innerText = formatINR(totalPayable);
+    }
+
+    function loadPropertyEMI(price) {
+      if (!price) return;
+      const slider = document.getElementById('input-price');
+      slider.value = Math.min(Math.max(price, slider.min), slider.max);
+      updateEMICalculator();
+      switchTab('emi');
+    }
+
+    updateEMICalculator();
+    renderWeights();
+  </script>
+</body>
+</html>

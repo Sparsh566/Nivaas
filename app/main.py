@@ -1,18 +1,24 @@
-"""FastAPI application entry point. Legal routes registered before Gradio mount."""
+"""FastAPI application entry point with high-performance REST API and static UI."""
 
 import os
 import time
 import logging
 from collections import defaultdict
+from typing import Optional
+
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import gradio as gr
+from pydantic import BaseModel
 
 from app.config import settings
 from app.legal.terms import render_terms
 from app.legal.privacy import render_privacy
+from app.agent.loop import AgentState, run_agent
+from app.tools import calculate_emi, compare_properties
+from app.tools.calculate_emi import CalculateEMIArgs
+from app.tools.compare_properties import ComparePropertiesArgs
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Simple per-IP rate limiting (excludes static assets, localhost, and health checks)
+# Rate limiting (excludes static assets, localhost, and health checks)
 _rate_limits: dict[str, list[float]] = defaultdict(list)
 RATE_LIMIT_REQUESTS = 300
 RATE_LIMIT_WINDOW = 60  # seconds
@@ -39,10 +45,9 @@ RATE_LIMIT_WINDOW = 60  # seconds
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     path = request.url.path
-    # Bypass rate limiting for static assets, legal pages, health checks, and favicon
     if (
         path.startswith(("/static", "/assets", "/favicon"))
-        or path in ("/health", "/terms", "/privacy")
+        or path in ("/", "/health", "/api/health", "/terms", "/privacy")
         or "." in path.split("/")[-1]
     ):
         return await call_next(request)
@@ -66,13 +71,13 @@ async def rate_limit_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-# Static files
+# Static assets
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-# Legal routes BEFORE Gradio mount
+# Legal routes
 @app.get("/terms", response_class=HTMLResponse)
 async def terms_page():
     return render_terms()
@@ -84,6 +89,7 @@ async def privacy_page():
 
 
 @app.get("/health")
+@app.get("/api/health")
 async def health():
     return {
         "status": "ok",
@@ -94,7 +100,49 @@ async def health():
     }
 
 
-# Initialize database tables on startup
+# Request models
+class ChatRequest(BaseModel):
+    message: str
+    state: Optional[dict] = None
+
+
+@app.post("/api/chat")
+async def chat_endpoint(req: ChatRequest):
+    """Conversational endpoint: processes query through agent loop."""
+    state = AgentState.from_dict(req.state or {})
+    response, state = await run_agent(req.message, state)
+    return {
+        "response": response,
+        "state": state.to_dict(),
+        "shortlist": state.last_shortlist,
+        "requirements": state.requirements,
+        "weights": state.weights,
+        "agent_steps": state.agent_steps,
+        "is_demo": state.is_demo,
+    }
+
+
+@app.post("/api/emi")
+async def emi_endpoint(args: CalculateEMIArgs):
+    return await calculate_emi.execute(args)
+
+
+@app.post("/api/compare")
+async def compare_endpoint(args: ComparePropertiesArgs):
+    return await compare_properties.execute(args)
+
+
+# Main Single Page App
+@app.get("/", response_class=HTMLResponse)
+async def index_page():
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return HTMLResponse("<h1>Nivaas API is active</h1>")
+
+
+# Initialize database tables on startup (with graceful fallback)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting %s", settings.APP_NAME)
@@ -111,19 +159,3 @@ async def startup_event():
         logger.info("Database tables verified")
     except Exception as e:
         logger.warning("Database unavailable (%s). Continuing in serverless/in-memory mode.", str(e))
-
-
-# Mount Gradio at root (AFTER legal routes)
-from app.ui.app import create_gradio_app
-
-gradio_app = create_gradio_app()
-favicon_path = os.path.join(static_dir, "favicon.ico")
-if not os.path.exists(favicon_path):
-    favicon_path = os.path.join(static_dir, "favicon.svg")
-
-app = gr.mount_gradio_app(
-    app,
-    gradio_app,
-    path="/",
-    favicon_path=favicon_path if os.path.exists(favicon_path) else None,
-)
