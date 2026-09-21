@@ -116,3 +116,21 @@ def test_get_page_routes(client):
         res = client.get(path)
         assert res.status_code == 200
         assert "text/html" in res.headers.get("content-type", "")
+
+
+def test_fallback_post_auth_registration(client):
+    """Ensure POST to /api/index.py with auth payload successfully routes to registration."""
+    import uuid
+    unique_email = f"vercel_{uuid.uuid4().hex[:8]}@example.com"
+    res = client.post(
+        "/api/index.py?action=register",
+        json={
+            "email": unique_email,
+            "password": "Password@2026",
+            "full_name": "Vercel Test User",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "token" in data
+    assert data["user"]["email"] == unique_email

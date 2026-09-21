@@ -74,6 +74,26 @@ class FavoriteResponse(BaseModel):
     created_at: Optional[str] = None
 
 
+_tables_initialized = False
+
+
+async def ensure_db_tables():
+    global _tables_initialized
+    if not _tables_initialized:
+        try:
+            from app.db.engine import async_engine
+            from app.db.models import Base
+            async with async_engine.begin() as conn:
+                await conn.run_sync(
+                    lambda sync_conn: Base.metadata.create_all(
+                        sync_conn, tables=[User.__table__, UserFavorite.__table__]
+                    )
+                )
+            _tables_initialized = True
+        except Exception as e:
+            logger.warning("Could not auto-create auth tables: %s", str(e))
+
+
 def format_user(user: User) -> UserResponse:
     return UserResponse(
         id=str(user.id),
@@ -87,6 +107,7 @@ def format_user(user: User) -> UserResponse:
 @router.post("/auth/register", response_model=AuthResponse)
 async def register(req: RegisterRequest, response: Response):
     """Register a new user account with email and password."""
+    await ensure_db_tables()
     normalized_email = req.email.strip().lower()
 
     async with AsyncSessionLocal() as session:
@@ -135,6 +156,7 @@ async def register(req: RegisterRequest, response: Response):
 @router.post("/auth/login", response_model=AuthResponse)
 async def login(req: LoginRequest, response: Response):
     """Authenticate user with email and password."""
+    await ensure_db_tables()
     normalized_email = req.email.strip().lower()
 
     async with AsyncSessionLocal() as session:

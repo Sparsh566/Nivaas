@@ -39,22 +39,49 @@ class VercelPathMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             headers = {k.lower(): v for k, v in scope.get("headers", [])}
-            # Check edge rewrite headers injected by Vercel / proxies
-            matched = (
-                headers.get(b"x-matched-path")
-                or headers.get(b"x-forwarded-uri")
-                or headers.get(b"x-vercel-matched-path")
-                or headers.get(b"x-original-uri")
-                or headers.get(b"x-rewrite-url")
-            )
-            if matched:
-                path = matched.decode("utf-8", errors="ignore").split("?")[0].strip()
-                if path:
-                    if not path.startswith("/"):
-                        path = "/" + path
-                    if path != scope.get("path"):
-                        scope["path"] = path
-                        scope["raw_path"] = path.encode("ascii", errors="ignore")
+            serverless_destinations = {"/api/index.py", "/api/index", "/api/index.py/", "/api", "/api/"}
+            restored_path = None
+
+            # 1. Check query string for __path injected by vercel.json rewrite
+            query_string = scope.get("query_string", b"").decode("utf-8", errors="ignore")
+            if "__path=" in query_string:
+                import urllib.parse
+                for param in query_string.split("&"):
+                    if param.startswith("__path="):
+                        p = urllib.parse.unquote(param[7:]).split("?")[0].strip()
+                        if p:
+                            if not p.startswith("/"):
+                                p = "/" + p
+                            if p not in serverless_destinations:
+                                restored_path = p
+                                break
+
+            # 2. Check edge headers injected by Vercel / proxies
+            if not restored_path:
+                candidates = [
+                    headers.get(b"x-invoke-path"),
+                    headers.get(b"x-forwarded-uri"),
+                    headers.get(b"x-original-uri"),
+                    headers.get(b"x-rewrite-url"),
+                    headers.get(b"x-real-url"),
+                    headers.get(b"x-matched-path"),
+                    headers.get(b"x-vercel-matched-path"),
+                ]
+                for c in candidates:
+                    if c:
+                        p = c.decode("utf-8", errors="ignore").split("?")[0].strip()
+                        if p:
+                            if not p.startswith("/"):
+                                p = "/" + p
+                            # Only accept if it is not the serverless rewrite destination itself
+                            if p not in serverless_destinations:
+                                restored_path = p
+                                break
+
+            current_path = scope.get("path", "")
+            if restored_path and restored_path != current_path:
+                scope["path"] = restored_path
+                scope["raw_path"] = restored_path.encode("ascii", errors="ignore")
         await self.asgi_app(scope, receive, send)
 
 
@@ -231,6 +258,48 @@ async def fallback_post_endpoint(request: Request):
             body["listing_ids"] = body["properties"]
         args = ComparePropertiesArgs(**body)
         return await compare_endpoint(args)
+    elif isinstance(body, dict) and "email" in body and "password" in body:
+        from app.auth.router import register, login, RegisterRequest, LoginRequest
+        from fastapi import HTTPException
+        res = Response()
+        action = request.query_params.get("action", "").lower()
+        path_param = request.query_params.get("__path", "").lower()
+        is_register = (
+            action == "register"
+            or "register" in path_param
+            or "full_name" in body
+            or bool(body.get("full_name"))
+        )
+        try:
+            if is_register:
+                reg_data = {
+                    "email": body["email"],
+                    "password": body["password"],
+                    "full_name": body.get("full_name"),
+                }
+                auth_res = await register(RegisterRequest(**reg_data), res)
+            else:
+                login_data = {
+                    "email": body["email"],
+                    "password": body["password"],
+                }
+                auth_res = await login(LoginRequest(**login_data), res)
+
+            response = JSONResponse(content=auth_res.model_dump())
+            for header, val in res.headers.items():
+                if header.lower() == "set-cookie":
+                    response.headers.append("set-cookie", val)
+            return response
+        except HTTPException as http_exc:
+            return JSONResponse(
+                status_code=http_exc.status_code,
+                content={"detail": http_exc.detail},
+            )
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={"detail": f"Authentication error: {str(e)}"},
+            )
 
     return JSONResponse(
         status_code=400,

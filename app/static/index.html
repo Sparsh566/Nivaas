@@ -1742,7 +1742,7 @@
       alertBox.style.display = 'none';
       submitBtn.disabled = true;
 
-      const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const endpoint = authMode === 'register' ? '/api/auth/register?action=register' : '/api/auth/login?action=login';
       const payload = { email, password };
       if (authMode === 'register' && fullName) {
         payload.full_name = fullName;
