@@ -86,6 +86,30 @@ def test_fallback_post_emi_without_headers(client):
     assert data["total_payable"] > 0
 
 
+def test_fallback_post_emi_with_alternative_keys(client):
+    """EMI calculations supporting alternative key names (property_price, annual_interest_rate)."""
+    res = client.post(
+        "/api/index.py",
+        json={"property_price": 6000000, "down_payment_pct": 25, "annual_interest_rate": 8.75, "tenure_years": 15},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["emi"] > 0
+
+
+@patch("app.main.run_agent", new_callable=AsyncMock)
+def test_mixed_case_matched_path_header(mock_run_agent, client):
+    """Test mixed-case X-Matched-Path header works properly."""
+    mock_run_agent.return_value = ("Mixed case works", AgentState())
+    res = client.post(
+        "/api/index.py",
+        headers={"X-Matched-Path": "/api/chat"},
+        json={"message": "1 BHK Pune"},
+    )
+    assert res.status_code == 200
+    assert res.json()["response"] == "Mixed case works"
+
+
 def test_get_page_routes(client):
     """Ensure HTML pages load properly across various Vercel aliases."""
     for path in ["/", "/api", "/api/index.py", "/index.html"]:

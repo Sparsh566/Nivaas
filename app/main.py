@@ -37,7 +37,7 @@ class VercelPathMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            headers = dict(scope.get("headers", []))
+            headers = {k.lower(): v for k, v in scope.get("headers", [])}
             # Check edge rewrite headers injected by Vercel / proxies
             matched = (
                 headers.get(b"x-matched-path")
@@ -47,10 +47,13 @@ class VercelPathMiddleware:
                 or headers.get(b"x-rewrite-url")
             )
             if matched:
-                path = matched.decode("utf-8", errors="ignore").split("?")[0]
-                if path and path != scope.get("path"):
-                    scope["path"] = path
-                    scope["raw_path"] = path.encode("ascii", errors="ignore")
+                path = matched.decode("utf-8", errors="ignore").split("?")[0].strip()
+                if path:
+                    if not path.startswith("/"):
+                        path = "/" + path
+                    if path != scope.get("path"):
+                        scope["path"] = path
+                        scope["raw_path"] = path.encode("ascii", errors="ignore")
         await self.asgi_app(scope, receive, send)
 
 
@@ -210,10 +213,17 @@ async def fallback_post_endpoint(request: Request):
     if isinstance(body, dict) and "message" in body:
         req = ChatRequest(**body)
         return await chat_endpoint(req)
-    elif isinstance(body, dict) and ("price_inr" in body or "annual_rate" in body):
+    elif isinstance(body, dict) and any(k in body for k in ("price_inr", "property_price", "annual_rate", "annual_interest_rate", "loan_amount")):
+        # Normalize alternative keys
+        if "property_price" in body and "price_inr" not in body:
+            body["price_inr"] = body["property_price"]
+        if "annual_interest_rate" in body and "annual_rate" not in body:
+            body["annual_rate"] = body["annual_interest_rate"]
         args = CalculateEMIArgs(**body)
         return await emi_endpoint(args)
-    elif isinstance(body, dict) and "properties" in body:
+    elif isinstance(body, dict) and any(k in body for k in ("listing_ids", "properties")):
+        if "properties" in body and "listing_ids" not in body:
+            body["listing_ids"] = body["properties"]
         args = ComparePropertiesArgs(**body)
         return await compare_endpoint(args)
 
