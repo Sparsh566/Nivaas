@@ -28,11 +28,39 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.APP_NAME, docs_url=None, redoc_url=None)
 
+
+class VercelPathMiddleware:
+    """ASGI middleware to restore the original request path when Vercel rewrites to /api/index.py."""
+
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            headers = dict(scope.get("headers", []))
+            # Check edge rewrite headers injected by Vercel / proxies
+            matched = (
+                headers.get(b"x-matched-path")
+                or headers.get(b"x-forwarded-uri")
+                or headers.get(b"x-vercel-matched-path")
+                or headers.get(b"x-original-uri")
+                or headers.get(b"x-rewrite-url")
+            )
+            if matched:
+                path = matched.decode("utf-8", errors="ignore").split("?")[0]
+                if path and path != scope.get("path"):
+                    scope["path"] = path
+                    scope["raw_path"] = path.encode("ascii", errors="ignore")
+        await self.asgi_app(scope, receive, send)
+
+
+app.add_middleware(VercelPathMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -52,7 +80,13 @@ async def rate_limit_middleware(request: Request, call_next):
     ):
         return await call_next(request)
 
-    client_ip = request.client.host if request.client else "unknown"
+    forwarded = request.headers.get("x-forwarded-for")
+    real_ip = request.headers.get("x-real-ip")
+    client_ip = (
+        (forwarded.split(",")[0].strip() if forwarded else None)
+        or real_ip
+        or (request.client.host if request.client else "unknown")
+    )
     if client_ip in ("127.0.0.1", "localhost", "::1"):
         return await call_next(request)
 
@@ -158,6 +192,35 @@ async def index_page() -> HTMLResponse:
             with open(p, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
     return HTMLResponse("<h1>Nivaas API is active</h1>")
+
+
+# Fallback POST handler for serverless entry points (prevents 405 if rewrites mask the path)
+@app.post("/api/index.py")
+@app.post("/api/index")
+@app.post("/api")
+@app.post("/api/")
+@app.post("/")
+async def fallback_post_endpoint(request: Request):
+    """Safely route POST requests arriving at serverless entry paths directly to their handler."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    if isinstance(body, dict) and "message" in body:
+        req = ChatRequest(**body)
+        return await chat_endpoint(req)
+    elif isinstance(body, dict) and ("price_inr" in body or "annual_rate" in body):
+        args = CalculateEMIArgs(**body)
+        return await emi_endpoint(args)
+    elif isinstance(body, dict) and "properties" in body:
+        args = ComparePropertiesArgs(**body)
+        return await compare_endpoint(args)
+
+    return JSONResponse(
+        status_code=400,
+        content={"detail": "Unsupported POST payload on serverless entry point."},
+    )
 
 
 # 404 Fallback for HTML navigation requests (Single Page App routing)
