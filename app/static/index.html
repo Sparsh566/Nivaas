@@ -821,6 +821,271 @@
     footer a:hover {
       color: var(--primary-hover);
     }
+
+    /* User Account & Auth Styles */
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      padding: 4px 8px 4px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+    }
+
+    .user-avatar {
+      width: 22px;
+      height: 22px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.72rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+    }
+
+    .user-name {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .chip-logout-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .chip-logout-btn:hover {
+      color: #EF4444;
+    }
+
+    .auth-dialog {
+      max-width: 420px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 14px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 8px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .auth-tab.active {
+      color: var(--primary-hover);
+      border-bottom-color: var(--primary);
+    }
+
+    .auth-alert {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      margin-bottom: 14px;
+      border: 1px solid transparent;
+    }
+
+    .auth-alert.error {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #F87171;
+    }
+
+    .auth-alert.success {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34D399;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+      text-align: left;
+    }
+
+    .form-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-input {
+      background: var(--bg-base);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .auth-submit-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-weight: 700;
+      padding: 10px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease;
+      margin-top: 4px;
+    }
+
+    .auth-submit-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .auth-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .auth-footer-text {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    .auth-footer-text a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+
+    .auth-footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* Favorites Modal Styles */
+    .fav-dialog {
+      max-width: 560px;
+      max-height: 80vh;
+    }
+
+    .favorites-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .fav-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .fav-card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .fav-card-meta {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .fav-card-price {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--primary-hover);
+    }
+
+    .fav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fav-delete-btn {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #F87171;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    .fav-delete-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .card-btn-fav {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .card-btn-fav:hover {
+      background: var(--bg-card);
+      color: #F43F5E;
+      border-color: #F43F5E;
+    }
+
+    .card-btn-fav.active {
+      background: rgba(244, 63, 94, 0.14);
+      color: #F43F5E;
+      border-color: rgba(244, 63, 94, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -846,6 +1111,17 @@
       <button class="nav-btn" onclick="resetSession()">
         New Search
       </button>
+      <button class="nav-btn" id="navFavoritesBtn" onclick="openFavoritesModal()" style="display:none;">
+        Saved (<span id="favCount">0</span>)
+      </button>
+      <button class="nav-btn highlight" id="authNavBtn" onclick="openAuthModal()">
+        Sign In
+      </button>
+      <div class="user-chip" id="userChip" style="display:none;">
+        <span class="user-avatar" id="userAvatar">U</span>
+        <span class="user-name" id="userName">User</span>
+        <button class="chip-logout-btn" onclick="handleLogout()" title="Sign Out">&times;</button>
+      </div>
       <a href="/terms" class="nav-btn" target="_blank">Terms</a>
       <a href="/privacy" class="nav-btn" target="_blank">Privacy</a>
     </div>
@@ -1013,6 +1289,62 @@
     </div>
   </div>
 
+  <!-- Auth Modal -->
+  <div class="modal-backdrop" id="auth-modal">
+    <div class="emi-dialog auth-dialog">
+      <div class="dialog-header">
+        <div class="dialog-title" id="auth-modal-title">Sign In to Nivaas</div>
+        <button class="dialog-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button type="button" class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Create Account</button>
+      </div>
+
+      <div id="auth-alert" class="auth-alert" style="display:none;"></div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group" id="group-fullname" style="display:none;">
+          <label class="form-label" for="auth-fullname">Full Name</label>
+          <input type="text" id="auth-fullname" class="form-input" placeholder="e.g. Sparsh Sharma" autocomplete="name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" class="form-input" required placeholder="name@example.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="auth-password">Password</label>
+          <input type="password" id="auth-password" class="form-input" required placeholder="Minimum 8 characters" minlength="8" autocomplete="current-password" />
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="auth-submit-btn">
+          <span id="auth-submit-text">Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-footer-text">
+        <span id="auth-toggle-msg">Don't have an account?</span>
+        <a href="javascript:void(0)" id="auth-toggle-link" onclick="toggleAuthMode()">Create one</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Favorites Modal -->
+  <div class="modal-backdrop" id="fav-modal">
+    <div class="emi-dialog fav-dialog">
+      <div class="dialog-header">
+        <div class="dialog-title">Saved Shortlist (<span id="fav-modal-count">0</span>)</div>
+        <button class="dialog-close" onclick="closeFavoritesModal()">&times;</button>
+      </div>
+      <div id="favorites-list" class="favorites-list-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div>Nivaas (c) 2026 | Indian Real Estate Intelligence</div>
     <div>
@@ -1151,6 +1483,7 @@
     }
 
     function renderShortlistDeck(properties) {
+      currentShortlist = properties || [];
       const container = document.getElementById('showcase-body');
       const countTag = document.getElementById('count-tag');
       const count = properties ? properties.length : 0;
@@ -1169,6 +1502,7 @@
         const loc = [p.locality, p.city].filter(Boolean).join(", ") || "Prime Location";
         const title = p.title || (bhk + " in " + loc);
         const sourceUrl = p.source_url || "#";
+        const isSaved = isPropertyFavorited(p);
 
         let factorsHtml = '';
         if (p.factor_breakdown && p.factor_breakdown.length > 0) {
@@ -1203,6 +1537,9 @@
             <div class="recom-actions">
               <button class="card-btn" onclick="openEMIModal(${p.price_inr || 6500000})">
                 Calculate EMI
+              </button>
+              <button class="card-btn-fav ${isSaved ? 'active' : ''}" onclick="toggleSaveProperty(${idx})" title="Save to Shortlist">
+                ${isSaved ? 'Saved' : 'Save'}
               </button>
               ${sourceUrl !== '#' ? `
                 <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="card-link">
@@ -1262,15 +1599,329 @@
       document.getElementById('fig-total').innerText = formatIndianCurrency(totalPayment);
     }
 
-    // Close modal when clicking on backdrop outside dialog
-    document.getElementById('emi-modal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeEMIModal();
+    // --- Authentication and User Favorites State & Handlers ---
+    let currentUser = null;
+    let userFavorites = [];
+    let currentShortlist = [];
+    let authMode = 'login'; // 'login' or 'register'
+
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          currentUser = await res.json();
+          updateUserNav();
+          await fetchFavorites();
+        } else {
+          currentUser = null;
+          updateUserNav();
+        }
+      } catch (err) {
+        currentUser = null;
+        updateUserNav();
       }
+    }
+
+    function updateUserNav() {
+      const authBtn = document.getElementById('authNavBtn');
+      const userChip = document.getElementById('userChip');
+      const favBtn = document.getElementById('navFavoritesBtn');
+      const userName = document.getElementById('userName');
+      const userAvatar = document.getElementById('userAvatar');
+
+      if (currentUser) {
+        if (authBtn) authBtn.style.display = 'none';
+        if (userChip) userChip.style.display = 'inline-flex';
+        if (favBtn) favBtn.style.display = 'inline-flex';
+        const displayName = currentUser.full_name || currentUser.email.split('@')[0];
+        if (userName) userName.innerText = displayName;
+        if (userAvatar) userAvatar.innerText = displayName.charAt(0).toUpperCase();
+      } else {
+        if (authBtn) authBtn.style.display = 'inline-flex';
+        if (userChip) userChip.style.display = 'none';
+        if (favBtn) favBtn.style.display = 'none';
+      }
+    }
+
+    async function fetchFavorites() {
+      if (!currentUser) {
+        userFavorites = [];
+        updateFavCount();
+        return;
+      }
+      try {
+        const res = await fetch('/api/user/favorites');
+        if (res.ok) {
+          userFavorites = await res.json();
+          updateFavCount();
+          if (currentShortlist && currentShortlist.length > 0) {
+            renderShortlistDeck(currentShortlist);
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching favorites:", e);
+      }
+    }
+
+    function updateFavCount() {
+      const count = userFavorites ? userFavorites.length : 0;
+      const countEl = document.getElementById('favCount');
+      if (countEl) countEl.innerText = count;
+      const modalCountEl = document.getElementById('fav-modal-count');
+      if (modalCountEl) modalCountEl.innerText = count;
+    }
+
+    function isPropertyFavorited(p) {
+      if (!userFavorites || userFavorites.length === 0) return false;
+      const bhk = p.bhk ? p.bhk + " BHK" : "Residential";
+      const loc = [p.locality, p.city].filter(Boolean).join(", ") || "Prime Location";
+      const title = p.title || (bhk + " in " + loc);
+      return userFavorites.some(f => (p.listing_id && f.listing_id === p.listing_id) || (f.title === title));
+    }
+
+    function openAuthModal(msg) {
+      const alertBox = document.getElementById('auth-alert');
+      if (msg) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerText = msg;
+        alertBox.style.display = 'block';
+      } else {
+        alertBox.style.display = 'none';
+      }
+      document.getElementById('auth-modal').classList.add('open');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.remove('open');
+      document.getElementById('auth-alert').style.display = 'none';
+    }
+
+    function switchAuthTab(mode) {
+      authMode = mode;
+      const titleEl = document.getElementById('auth-modal-title');
+      const submitText = document.getElementById('auth-submit-text');
+      const tabLogin = document.getElementById('tab-login');
+      const tabReg = document.getElementById('tab-register');
+      const groupFullName = document.getElementById('group-fullname');
+      const toggleMsg = document.getElementById('auth-toggle-msg');
+      const toggleLink = document.getElementById('auth-toggle-link');
+      const alertBox = document.getElementById('auth-alert');
+      alertBox.style.display = 'none';
+
+      if (mode === 'register') {
+        titleEl.innerText = "Create Your Account";
+        submitText.innerText = "Create Account";
+        tabLogin.classList.remove('active');
+        tabReg.classList.add('active');
+        groupFullName.style.display = 'flex';
+        toggleMsg.innerText = "Already have an account?";
+        toggleLink.innerText = "Sign In";
+      } else {
+        titleEl.innerText = "Sign In to Nivaas";
+        submitText.innerText = "Sign In";
+        tabLogin.classList.add('active');
+        tabReg.classList.remove('active');
+        groupFullName.style.display = 'none';
+        toggleMsg.innerText = "Don't have an account?";
+        toggleLink.innerText = "Create one";
+      }
+    }
+
+    function toggleAuthMode() {
+      switchAuthTab(authMode === 'login' ? 'register' : 'login');
+    }
+
+    async function handleAuthSubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const fullName = document.getElementById('auth-fullname').value.trim();
+      const alertBox = document.getElementById('auth-alert');
+      const submitBtn = document.getElementById('auth-submit-btn');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+
+      const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const payload = { email, password };
+      if (authMode === 'register' && fullName) {
+        payload.full_name = fullName;
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alertBox.className = 'auth-alert error';
+          alertBox.innerText = data.detail || "Authentication failed. Please check your credentials.";
+          alertBox.style.display = 'block';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        currentUser = data.user;
+        updateUserNav();
+        await fetchFavorites();
+        closeAuthModal();
+        document.getElementById('auth-password').value = '';
+      } catch (err) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerText = "Network error. Please try again.";
+        alertBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {
+        console.error("Logout request failed:", e);
+      }
+      currentUser = null;
+      userFavorites = [];
+      updateUserNav();
+      updateFavCount();
+      if (currentShortlist && currentShortlist.length > 0) {
+        renderShortlistDeck(currentShortlist);
+      }
+      closeFavoritesModal();
+    }
+
+    async function toggleSaveProperty(idx) {
+      if (!currentUser) {
+        openAuthModal("Please sign in to save properties to your shortlist.");
+        return;
+      }
+
+      const p = currentShortlist[idx];
+      if (!p) return;
+
+      const bhk = p.bhk ? p.bhk + " BHK" : "Residential";
+      const loc = [p.locality, p.city].filter(Boolean).join(", ") || "Prime Location";
+      const title = p.title || (bhk + " in " + loc);
+
+      const existing = userFavorites.find(f => (p.listing_id && f.listing_id === p.listing_id) || f.title === title);
+
+      if (existing) {
+        try {
+          const res = await fetch(`/api/user/favorites/${existing.id}`, { method: 'DELETE' });
+          if (res.ok) {
+            userFavorites = userFavorites.filter(f => f.id !== existing.id);
+            updateFavCount();
+            renderShortlistDeck(currentShortlist);
+          }
+        } catch (e) {
+          console.error("Error removing favorite:", e);
+        }
+      } else {
+        const favPayload = {
+          listing_id: p.listing_id || null,
+          title: title,
+          locality: p.locality || null,
+          city: p.city || null,
+          price_inr: p.price_inr || null,
+          bhk: p.bhk || null,
+          source_url: p.source_url || null,
+          metadata_json: { match_score: p.match_score }
+        };
+        try {
+          const res = await fetch('/api/user/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(favPayload)
+          });
+          if (res.ok) {
+            const savedFav = await res.json();
+            userFavorites.unshift(savedFav);
+            updateFavCount();
+            renderShortlistDeck(currentShortlist);
+          }
+        } catch (e) {
+          console.error("Error adding favorite:", e);
+        }
+      }
+    }
+
+    function openFavoritesModal() {
+      const container = document.getElementById('favorites-list');
+      if (!userFavorites || userFavorites.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:30px 10px;color:var(--text-muted);">
+            <div style="font-size:0.95rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;">No saved properties yet</div>
+            <div style="font-size:0.8rem;">Click the Save button on any property recommendation to bookmark it here.</div>
+          </div>
+        `;
+      } else {
+        let html = '';
+        userFavorites.forEach(f => {
+          const price = f.price_inr ? formatIndianCurrency(f.price_inr) : "Price on Request";
+          const bhk = f.bhk ? f.bhk + " BHK" : "Residential";
+          const loc = [f.locality, f.city].filter(Boolean).join(", ") || "";
+          html += `
+            <div class="fav-card">
+              <div>
+                <div class="fav-card-title">${f.title}</div>
+                <div class="fav-card-meta">
+                  <span class="fav-card-price">${price}</span>
+                  <span>•</span>
+                  <span>${bhk}</span>
+                  ${loc ? `<span>•</span><span>${loc}</span>` : ''}
+                </div>
+              </div>
+              <div class="fav-actions">
+                ${f.source_url && f.source_url !== '#' ? `
+                  <a href="${f.source_url}" target="_blank" rel="noopener noreferrer" class="card-link" style="font-size:0.8rem;">View</a>
+                ` : ''}
+                <button class="fav-delete-btn" onclick="removeFavoriteItem(${f.id})">Remove</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+      document.getElementById('fav-modal').classList.add('open');
+    }
+
+    function closeFavoritesModal() {
+      document.getElementById('fav-modal').classList.remove('open');
+    }
+
+    async function removeFavoriteItem(id) {
+      try {
+        const res = await fetch(`/api/user/favorites/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          userFavorites = userFavorites.filter(f => f.id !== id);
+          updateFavCount();
+          openFavoritesModal();
+          if (currentShortlist && currentShortlist.length > 0) {
+            renderShortlistDeck(currentShortlist);
+          }
+        }
+      } catch (e) {
+        console.error("Error removing favorite:", e);
+      }
+    }
+
+    // Close modals on backdrop click
+    document.getElementById('emi-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeEMIModal();
+    });
+    document.getElementById('auth-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeAuthModal();
+    });
+    document.getElementById('fav-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeFavoritesModal();
     });
 
-    // Initialize calculation on load
+    // Initialize calculation and auth state on load
     recalculateEMI();
+    checkAuthSession();
   </script>
 </body>
 </html>

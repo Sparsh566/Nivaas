@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     DAILY_TAVILY_CREDIT_CAP: int = 40
     MAX_TAVILY_CALLS_PER_MESSAGE: int = 3
 
+    # Authentication & JWT
+    JWT_SECRET_KEY: str = "nivaas-dev-secret-key-change-in-production-12345"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+
     OPERATOR_NAME: str = ""
     CONTACT_EMAIL: str = "1774.sparsh@gmail.com"
     JURISDICTION_CITY: str = ""

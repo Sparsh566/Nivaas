@@ -19,6 +19,7 @@ from app.agent.loop import AgentState, run_agent
 from app.tools import calculate_emi, compare_properties
 from app.tools.calculate_emi import CalculateEMIArgs
 from app.tools.compare_properties import ComparePropertiesArgs
+from app.auth.router import router as auth_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -173,6 +174,10 @@ async def emi_endpoint(args: CalculateEMIArgs):
 @app.post("/compare")
 async def compare_endpoint(args: ComparePropertiesArgs):
     return await compare_properties.execute(args)
+
+
+# Authentication and User routes
+app.include_router(auth_router)
 
 
 # Main Single Page App (with route aliases for Vercel and local dev)
